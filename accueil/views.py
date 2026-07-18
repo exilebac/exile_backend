@@ -10,3 +10,11 @@ class VideoViewSet(viewsets.ModelViewSet):
         if self.action in ['list', 'retrieve']:
             return [permissions.AllowAny()]   # ✅ lecture publique
         return [permissions.IsAuthenticated()]  # ✅ upload/update/delete mande login
+
+
+
+
+from django.shortcuts import render
+
+def backend_status(request):
+    return render(request, "status.html")

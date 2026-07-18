@@ -3,8 +3,10 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib import admin
+from accueil.views import backend_status
 
 urlpatterns = [
+    path('', backend_status),
     path('admin/', admin.site.urls),
     path('api/v1/', include('API.urls')),
 
