@@ -1,14 +1,41 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from rest_framework.exceptions import AuthenticationFailed
+from django.utils import timezone
+from django.core.cache import cache
+from django.db import IntegrityError
+import uuid
+
 from .models import CustomUser
 from .serializers import UserSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from django.utils import timezone
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        try:
+            data = request.data.copy()
+
+            # ✅ Si username pa voye, kreye yon default inik
+            if not data.get("username"):
+                base_name = data.get("full_name", "user")
+                data["username"] = f"{base_name}_{uuid.uuid4().hex[:6]}"
+
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except IntegrityError:
+            return Response(
+                {"error": "Username oswa email deja egziste."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 
 class ProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
@@ -18,13 +45,9 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
-from django.core.cache import cache
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.exceptions import AuthenticationFailed
-
 class CustomLoginView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
-        username = request.data.get('username')   # ✅ itilize username
+        username = request.data.get('username')
         key = f"login_attempts_{username}"
         attempts = cache.get(key, 0)
 
@@ -45,8 +68,8 @@ class CustomLoginView(TokenObtainPairView):
                 user.save()
 
         return response
-    
-    def get_client_ip(self, request):   # ✅ ajoute metòd sa
+
+    def get_client_ip(self, request):
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
             ip = x_forwarded_for.split(',')[0]
