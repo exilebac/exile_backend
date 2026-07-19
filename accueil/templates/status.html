@@ -1,34 +1,443 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Backend Status</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 100px; background: #f9f9f9; }
-        h1 { color: #2c3e50; }
-        p { color: #555; }
-        .traffic {
-            display: flex; justify-content: center; gap: 10px; margin-top: 20px;
-        }
-        .dot {
-            width: 15px; height: 15px;
-            background: #27ae60; border-radius: 50%;
-            animation: bounce 1s infinite alternate;
-        }
-        .dot:nth-child(2) { animation-delay: 0.2s; }
-        .dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bounce {
-            from { transform: translateY(0); opacity: 0.7; }
-            to { transform: translateY(-15px); opacity: 1; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backend · Status</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0e1219;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .status-card {
+      max-width: 1000px;
+      width: 100%;
+      background: #151e2a;
+      border-radius: 2.5rem;
+      padding: 2.5rem 2.8rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 1px 2px rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(2px);
+      border: 1px solid rgba(255, 255, 255, 0.02);
+      transition: all 0.2s ease;
+    }
+
+    .status-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2.2rem;
+    }
+
+    .status-title h1 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #e0e9f5 0%, #b0c7e5 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-title h1 i {
+      background: #2a3a4e;
+      padding: 0.4rem 0.6rem;
+      border-radius: 1rem;
+      font-size: 1.3rem;
+      color: #8bb3e0;
+      -webkit-text-fill-color: #8bb3e0;
+      background: rgba(45, 70, 100, 0.3);
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .status-badge {
+      background: #1f2a38;
+      padding: 0.5rem 1.2rem;
+      border-radius: 100px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 1px solid #2d3f51;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      backdrop-filter: blur(4px);
+    }
+
+    .status-badge .pulse-dot {
+      width: 12px;
+      height: 12px;
+      background: #2fdf84;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 12px #2fdf84aa;
+      animation: pulse-green 2s infinite;
+    }
+
+    .status-badge span {
+      color: #cddcec;
+      font-weight: 500;
+      font-size: 0.9rem;
+      letter-spacing: 0.2px;
+    }
+
+    @keyframes pulse-green {
+      0% { opacity: 0.5; transform: scale(0.95); }
+      50% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 0.5; transform: scale(0.95); }
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.2rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .metric-item {
+      background: #1a2533;
+      border-radius: 1.8rem;
+      padding: 1.4rem 0.8rem;
+      text-align: center;
+      border: 1px solid #283546;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+      transition: 0.15s ease;
+    }
+
+    .metric-item:hover {
+      border-color: #3c526b;
+      background: #1e2b3b;
+    }
+
+    .metric-item .metric-value {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #f0f6ff;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .metric-item .metric-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: #8da2bf;
+      letter-spacing: 0.3px;
+      font-weight: 500;
+      margin-top: 0.2rem;
+    }
+
+    .metric-item .metric-icon {
+      color: #3b6b9b;
+      font-size: 0.9rem;
+      margin-right: 4px;
+    }
+
+    .traffic-panel {
+      background: #111b26;
+      border-radius: 2rem;
+      padding: 1.6rem 1.8rem;
+      margin-bottom: 2rem;
+      border: 1px solid #263340;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .traffic-live {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .traffic-live .traffic-label {
+      color: #b4c9e3;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .traffic-dots {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .dot {
+      width: 16px;
+      height: 16px;
+      background: #2fdf84;
+      border-radius: 50%;
+      opacity: 0.5;
+      animation: traffic-bounce 1.4s infinite alternate ease-in-out;
+      box-shadow: 0 0 8px #2fdf8466;
+    }
+
+    .dot:nth-child(2) { animation-delay: 0.3s; background: #4fc3f7; box-shadow: 0 0 8px #4fc3f766; }
+    .dot:nth-child(3) { animation-delay: 0.6s; background: #b78aff; box-shadow: 0 0 8px #b78aff66; }
+    .dot:nth-child(4) { animation-delay: 0.9s; background: #f7b773; box-shadow: 0 0 8px #f7b77366; }
+
+    @keyframes traffic-bounce {
+      0% { transform: translateY(0px) scale(0.9); opacity: 0.4; }
+      100% { transform: translateY(-14px) scale(1.1); opacity: 1; }
+    }
+
+    .api-endpoint {
+      background: #0f1722;
+      padding: 0.5rem 1.4rem;
+      border-radius: 100px;
+      border: 1px solid #2d4055;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .api-endpoint code {
+      color: #c6daf5;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      letter-spacing: 0.2px;
+    }
+
+    .api-endpoint i {
+      color: #4fc3f7;
+      font-size: 0.9rem;
+    }
+
+    .endpoint-badge {
+      background: #1b3144;
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #a0c0e5;
+      text-transform: uppercase;
+    }
+
+    .services-status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.2rem;
+      margin-bottom: 1.8rem;
+    }
+
+    .service-item {
+      flex: 1 1 160px;
+      background: #131d29;
+      border-radius: 1.5rem;
+      padding: 0.8rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      border: 1px solid #253340;
+    }
+
+    .service-item .service-icon {
+      width: 34px;
+      height: 34px;
+      background: #1f3144;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #88b0db;
+      font-size: 1rem;
+    }
+
+    .service-item .service-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .service-item .service-name {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #dce8f5;
+    }
+
+    .service-item .service-status {
+      font-size: 0.7rem;
+      color: #7a9bc2;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .service-status .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .status-dot.green { background: #2fdf84; box-shadow: 0 0 8px #2fdf84aa; }
+    .status-dot.yellow { background: #f5b45a; box-shadow: 0 0 8px #f5b45aaa; }
+
+    .footer-note {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      border-top: 1px solid #233140;
+      padding-top: 1.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .footer-note .uptime {
+      color: #8aa3c2;
+      font-size: 0.8rem;
+    }
+
+    .footer-note .uptime i {
+      color: #3b8fc2;
+      margin-right: 6px;
+    }
+
+    .footer-note .version {
+      background: #1b2535;
+      padding: 0.25rem 1rem;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      color: #95b1d3;
+      border: 1px solid #2e4057;
+    }
+
+    @media (max-width: 780px) {
+      .status-card { padding: 1.8rem; }
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 500px) {
+      .status-title h1 { font-size: 1.5rem; }
+      .traffic-panel { flex-direction: column; align-items: stretch; }
+      .api-endpoint { justify-content: center; }
+      .services-status { flex-direction: column; }
+    }
+
+    .glow-text {
+      text-shadow: 0 0 20px rgba(70, 130, 200, 0.1);
+    }
+
+    i, .fas, .far { font-style: normal; }
+  </style>
 </head>
 <body>
-    <h1>🚀 Backend is running</h1>
-    <p>Traffic is flowing through the API...</p>
-    <div class="traffic">
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
+
+<div class="status-card">
+  
+  <div class="status-header">
+    <div class="status-title">
+      <h1>
+        <i class="fas fa-server"></i> 
+        <span>backend·status</span>
+      </h1>
+      <div style="font-size: 0.8rem; color: #6e8db0; margin-top: 4px; font-weight: 400; letter-spacing: 0.2px;">
+        <i class="fas fa-route" style="margin-right: 4px;"></i> API gateway · edge
+      </div>
     </div>
+    <div class="status-badge">
+      <span class="pulse-dot"></span>
+      <span>All systems nominal</span>
+    </div>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-item">
+      <div class="metric-value"></div>
+      <div class="metric-label"><i class="fas fa-bolt metric-icon"></i> req/s</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value"></div>
+      <div class="metric-label"><i class="fas fa-clock metric-icon"></i> p95 latency</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value"></div>
+      <div class="metric-label"><i class="fas fa-check-circle metric-icon"></i> uptime</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value"></div>
+      <div class="metric-label"><i class="fas fa-database metric-icon"></i> active conn.</div>
+    </div>
+  </div>
+
+  <div class="traffic-panel">
+    <div class="traffic-live">
+      <span class="traffic-label"><i class="fas fa-wave-square" style="margin-right: 8px; color: #5d8fc0;"></i> live traffic</span>
+      <div class="traffic-dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+    <div class="api-endpoint">
+      <i class="fas fa-link"></i>
+      <code></code>
+      <span class="endpoint-badge">stable</span>
+    </div>
+  </div>
+
+  <div class="services-status">
+    <div class="service-item">
+      <div class="service-icon"><i class="fas fa-cloud"></i></div>
+      <div class="service-info">
+        <span class="service-name">Gateway</span>
+        <span class="service-status"><span class="status-dot green"></span> </span>
+      </div>
+    </div>
+    <div class="service-item">
+      <div class="service-icon"><i class="fas fa-cube"></i></div>
+      <div class="service-info">
+        <span class="service-name"></span>
+        <span class="service-status"><span class="status-dot green"></span> </span>
+      </div>
+    </div>
+    <div class="service-item">
+      <div class="service-icon"><i class="fas fa-database"></i></div>
+      <div class="service-info">
+        <span class="service-name"></span>
+        <span class="service-status"><span class="status-dot green"></span> </span>
+      </div>
+    </div>
+    <div class="service-item">
+      <div class="service-icon"><i class="fas fa-memory"></i></div>
+      <div class="service-info">
+        <span class="service-name"></span>
+        <span class="service-status"><span class="status-dot yellow"></span> </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    <div class="uptime">
+      <i class="fas fa-circle" style="color: #2fdf84; font-size: 0.5rem; vertical-align: middle;"></i>
+      uptime <strong style="color: #d4e4fa;">72h 14m</strong>
+    </div>
+    <div class="version">
+      <i class="fas fa-tag"></i> v3.2.1 · <i class="fas fa-shield-alt"></i> mTLS
+    </div>
+  </div>
+  
+  <div style="margin-top: 1rem; font-size: 0.7rem; color: #3a526b; text-align: right; letter-spacing: 0.3px; border-top: 1px solid #1d2a38; padding-top: 0.8rem;">
+    <i class="fas fa-code"></i> backend · api ready · pro design
+  </div>
+</div>
+
 </body>
 </html>
