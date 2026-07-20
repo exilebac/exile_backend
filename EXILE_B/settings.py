@@ -23,7 +23,16 @@ DATABASES = {
 
 # CORS / Auth
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_HEADERS = ["*"]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://exile-16qm.onrender.com",
+    "https://*.postman.com"
+]
+
 AUTH_USER_MODEL = 'users.CustomUser'
+
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -44,6 +53,8 @@ INSTALLED_APPS = [
     'drf_spectacular_sidecar',
     'corsheaders',
 ]
+
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
