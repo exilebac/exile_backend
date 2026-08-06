@@ -25,7 +25,8 @@ DATABASES = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
-    "https://exile-16qm.onrender.com"
+    "https://exile-16qm.onrender.com",
+    "https://exoe.netlify.app"
 ]
 CORS_ALLOW_CREDENTIALS = True
 AUTH_USER_MODEL = 'users.CustomUser'
