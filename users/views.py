@@ -48,6 +48,7 @@ class ProfileView(generics.RetrieveUpdateAPIView):
 class CustomLoginView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         username = request.data.get('username')
+        print(f"DEBUG: Login attempt for username: {username}")
         key = f"login_attempts_{username}"
         attempts = cache.get(key, 0)
 
@@ -55,6 +56,7 @@ class CustomLoginView(TokenObtainPairView):
             raise AuthenticationFailed("Trop de tentatives. Réessayez dans 10 minutes.")
 
         response = super().post(request, *args, **kwargs)
+        print(f"DEBUG: Login response status: {response.status_code}")
 
         if response.status_code != 200:
             cache.set(key, attempts + 1, timeout=600)  # 10 min
