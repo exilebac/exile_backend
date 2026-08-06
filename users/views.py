@@ -45,11 +45,11 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
-class ResetPasswordView(generics.UpdateAPIView):
+class ResetPasswordView(generics.GenericAPIView):
     queryset = CustomUser.objects.all()
     permission_classes = [permissions.AllowAny]
     
-    def update(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         email = request.data.get('email')
         new_password = request.data.get('new_password')
         
