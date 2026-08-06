@@ -5,7 +5,7 @@ from datetime import timedelta, date
 
 class CustomUser(AbstractUser):
     full_name = models.CharField(max_length=150)
-    phone_number = models.CharField(max_length=20, unique=True)
+    phone_number = models.CharField(max_length=20, unique=True, null=True, blank=True)
     birth_date = models.DateField(null=True, blank=True)
 
     profession = models.CharField(max_length=100, blank=True, null=True)
@@ -19,7 +19,7 @@ class CustomUser(AbstractUser):
     last_login_ip = models.GenericIPAddressField(null=True, blank=True)
 
     USERNAME_FIELD = 'username'   # ✅ Fòse JWT itilize username
-    REQUIRED_FIELDS = ['email']
+    REQUIRED_FIELDS = []  # Email et phone_number sont optionnels
 
     def save(self, *args, **kwargs):
         # username otomatik si pa defini

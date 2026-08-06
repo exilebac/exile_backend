@@ -47,6 +47,33 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
       validated_data.pop('confirm_password')
       password = validated_data.pop('password')
+
+      # Générer username automatiquement basé sur full_name si non fourni
+      if 'username' not in validated_data or not validated_data['username']:
+          full_name = validated_data.get('full_name', '')
+          # Séparer prénom et nom
+          name_parts = full_name.strip().split()
+          if len(name_parts) >= 2:
+              # Prendre le premier mot comme prénom et le reste comme nom
+              first_name = name_parts[0]
+              last_name = '_'.join(name_parts[1:])
+              username = f"@{first_name}_{last_name}"
+          else:
+              # Si seulement un mot, l'utiliser comme prénom
+              username = f"@{name_parts[0] if name_parts else 'user'}"
+
+          # Nettoyer: minuscules, retirer caractères spéciaux sauf underscore
+          username = username.lower()
+          username = re.sub(r'[^a-z0-9_@]', '', username)
+
+          # Ajouter un suffixe si le username existe déjà
+          base_username = username
+          counter = 1
+          while CustomUser.objects.filter(username=username).exists():
+              username = f"{base_username}_{counter}"
+              counter += 1
+          validated_data['username'] = username
+
       user = CustomUser(**validated_data)
       user.set_password(password)   # ✅ mot de passe hashé
       user.save()
