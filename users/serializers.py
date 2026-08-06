@@ -6,6 +6,8 @@ from django.utils import timezone
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     confirm_password = serializers.CharField(write_only=True)
+    email = serializers.EmailField(required=False, allow_blank=True)
+    phone_number = serializers.CharField(required=False, allow_blank=True)
 
     
     class Meta:
@@ -18,19 +20,26 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['username','last_login_time','last_login_ip']
 
     def validate_password(self, value):
-        # Regex: min 8 chars, 1 maj, 1 min, 1 digit, 1 special
-        pattern = r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$'
-        if not re.match(pattern, value):
+        # Validation simplifiée: min 8 caractères
+        if len(value) < 8:
             raise serializers.ValidationError(
-                "Le mot de passe doit contenir au moins 8 caractères, "
-                "une majuscule, une minuscule, un chiffre et un caractère spécial."
+                "Le mot de passe doit contenir au moins 8 caractères."
             )
         return value
 
     def validate(self, data):
+        # Valider qu'au moins email ou phone_number est fourni
+        email = data.get('email', '')
+        phone_number = data.get('phone_number', '')
+        
+        if not email and not phone_number:
+            raise serializers.ValidationError("Vous devez fournir un email ou un numéro de téléphone.")
+        
         if data['password'] != data['confirm_password']:
             raise serializers.ValidationError("Les mots de passe ne correspondent pas.")
-        if (timezone.now().date().year - data['birth_date'].year) < 18:
+        
+        birth_date = data.get('birth_date')
+        if birth_date and (timezone.now().date().year - birth_date.year) < 18:
             raise serializers.ValidationError("Vous devez avoir au moins 18 ans.")
         return data
     
