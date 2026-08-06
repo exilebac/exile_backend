@@ -17,7 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
             'phone_number','birth_date','profession','speciality','country','city',
             'last_login_time','last_login_ip'
         ]
-        read_only_fields = ['username','last_login_time','last_login_ip']
+        read_only_fields = ['last_login_time','last_login_ip']
 
     def validate_password(self, value):
         # Validation simplifiée: min 8 caractères
