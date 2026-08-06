@@ -22,7 +22,12 @@ DATABASES = {
 }
 
 # CORS / Auth
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://exile-16qm.onrender.com"
+]
+CORS_ALLOW_CREDENTIALS = True
 AUTH_USER_MODEL = 'users.CustomUser'
 
 INSTALLED_APPS = [
