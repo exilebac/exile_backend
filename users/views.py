@@ -48,7 +48,9 @@ class ProfileView(generics.RetrieveUpdateAPIView):
 class CustomLoginView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         username = request.data.get('username')
+        password = request.data.get('password')
         print(f"DEBUG: Login attempt for username: {username}")
+        print(f"DEBUG: Password length: {len(password) if password else 0}")
         
         # Si l'identifiant est un email, trouver le username correspondant
         if '@' in username:
@@ -57,6 +59,7 @@ class CustomLoginView(TokenObtainPairView):
                 username = user.username
                 request.data['username'] = username
                 print(f"DEBUG: Email found, using username: {username}")
+                print(f"DEBUG: User exists: {user.check_password(password)}")
             else:
                 print(f"DEBUG: Email not found in database")
         
