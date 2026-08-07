@@ -45,9 +45,60 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
+class ResetPasswordView(generics.GenericAPIView):
+    queryset = CustomUser.objects.all()
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request, *args, **kwargs):
+        email = request.data.get('email')
+        new_password = request.data.get('new_password')
+        
+        if not email or not new_password:
+            return Response(
+                {"error": "Email et nouveau mot de passe requis"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if len(new_password) < 8:
+            return Response(
+                {"error": "Le mot de passe doit contenir au moins 8 caractères"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        user = CustomUser.objects.filter(email=email).first()
+        if not user:
+            return Response(
+                {"error": "Email non trouvé"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        user.set_password(new_password)
+        user.save()
+        
+        return Response(
+            {"success": "Mot de passe réinitialisé avec succès"},
+            status=status.HTTP_200_OK
+        )
+
+
 class CustomLoginView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         username = request.data.get('username')
+        password = request.data.get('password')
+        print(f"DEBUG: Login attempt for username: {username}")
+        print(f"DEBUG: Password length: {len(password) if password else 0}")
+        
+        # Si l'identifiant est un email, trouver le username correspondant
+        if '@' in username:
+            user = CustomUser.objects.filter(email=username).first()
+            if user:
+                username = user.username
+                request.data['username'] = username
+                print(f"DEBUG: Email found, using username: {username}")
+                print(f"DEBUG: User exists: {user.check_password(password)}")
+            else:
+                print(f"DEBUG: Email not found in database")
+        
         key = f"login_attempts_{username}"
         attempts = cache.get(key, 0)
 
@@ -55,6 +106,7 @@ class CustomLoginView(TokenObtainPairView):
             raise AuthenticationFailed("Trop de tentatives. Réessayez dans 10 minutes.")
 
         response = super().post(request, *args, **kwargs)
+        print(f"DEBUG: Login response status: {response.status_code}")
 
         if response.status_code != 200:
             cache.set(key, attempts + 1, timeout=600)  # 10 min
