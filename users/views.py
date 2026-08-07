@@ -20,11 +20,6 @@ class RegisterView(generics.CreateAPIView):
         try:
             data = request.data.copy()
 
-            # ✅ Si username pa voye, kreye yon default inik
-            if not data.get("username"):
-                base_name = data.get("full_name", "user")
-                data["username"] = f"{base_name}_{uuid.uuid4().hex[:6]}"
-
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
