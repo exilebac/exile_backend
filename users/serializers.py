@@ -8,13 +8,14 @@ class UserSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(write_only=True)
     email = serializers.EmailField(required=False, allow_blank=True)
     phone_number = serializers.CharField(required=False, allow_blank=True)
+    gender = serializers.CharField(required=False, allow_blank=True)
 
     
     class Meta:
         model = CustomUser
         fields = [
             'id','full_name','username','email','password','confirm_password',
-            'phone_number','birth_date','profession','speciality','country','city',
+            'phone_number','birth_date','gender','profession','speciality','country','city',
             'last_login_time','last_login_ip'
         ]
         read_only_fields = ['last_login_time','last_login_ip']

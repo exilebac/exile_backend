@@ -7,6 +7,7 @@ class CustomUser(AbstractUser):
     full_name = models.CharField(max_length=150)
     phone_number = models.CharField(max_length=20, unique=True, null=True, blank=True)
     birth_date = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=20, blank=True, null=True)
 
     profession = models.CharField(max_length=100, blank=True, null=True)
     speciality = models.CharField(max_length=100, blank=True, null=True)
