@@ -16,7 +16,7 @@ class ProfilViewSet(viewsets.ModelViewSet):
     queryset = Profil.objects.all()
     permission_classes = [IsOwnerOrReadOnly]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['user__username', 'bio', 'location']
+    search_fields = ['user__username', 'user__full_name', 'user__profession', 'user__speciality', 'user__country', 'user__city', 'bio', 'location']
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
