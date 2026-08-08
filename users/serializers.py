@@ -9,6 +9,7 @@ class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=False, allow_blank=True)
     phone_number = serializers.CharField(required=False, allow_blank=True)
     gender = serializers.CharField(required=False, allow_blank=True)
+    username = serializers.CharField(required=False, allow_blank=True)
 
     
     class Meta:
