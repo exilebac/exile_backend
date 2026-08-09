@@ -13,7 +13,7 @@ class IsOwnerOrReadOnly(BasePermission):
 
 class ProfilViewSet(viewsets.ModelViewSet):
     serializer_class = ProfilSerializer
-    queryset = Profil.objects.all()
+    queryset = Profil.objects.select_related('user').all()
     permission_classes = [IsOwnerOrReadOnly]
     filter_backends = [filters.SearchFilter]
     search_fields = ['user__username', 'user__full_name', 'user__profession', 'user__speciality', 'user__country', 'user__city', 'bio', 'location']
