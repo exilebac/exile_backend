@@ -20,11 +20,6 @@ class RegisterView(generics.CreateAPIView):
         try:
             data = request.data.copy()
 
-            # ✅ Si username pa voye, kreye yon default inik
-            if not data.get("username"):
-                base_name = data.get("full_name", "user")
-                data["username"] = f"{base_name}_{uuid.uuid4().hex[:6]}"
-
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
@@ -87,17 +82,6 @@ class CustomLoginView(TokenObtainPairView):
         password = request.data.get('password')
         print(f"DEBUG: Login attempt for username: {username}")
         print(f"DEBUG: Password length: {len(password) if password else 0}")
-        
-        # Si l'identifiant est un email, trouver le username correspondant
-        if '@' in username:
-            user = CustomUser.objects.filter(email=username).first()
-            if user:
-                username = user.username
-                request.data['username'] = username
-                print(f"DEBUG: Email found, using username: {username}")
-                print(f"DEBUG: User exists: {user.check_password(password)}")
-            else:
-                print(f"DEBUG: Email not found in database")
         
         key = f"login_attempts_{username}"
         attempts = cache.get(key, 0)
