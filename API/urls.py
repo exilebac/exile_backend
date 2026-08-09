@@ -9,4 +9,6 @@ urlpatterns = [
     path('evenement/', include('evenement.urls')),
     path('abonnement/', include('abonnement.urls')),
     path('profil/', include('profil.urls')),
+    path('activities/', include('activities.urls')),
+    path('badges/', include('badges.urls')),
 ]

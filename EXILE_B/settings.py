@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'evenement',
     'abonnement',
     'profil',
+    'activities',
+    'badges',
     'drf_spectacular',
     'drf_spectacular_sidecar',
     'corsheaders',
