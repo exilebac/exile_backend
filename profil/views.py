@@ -1,4 +1,6 @@
 from rest_framework import viewsets, permissions, filters
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from .models import Profil
 from .serializers import ProfilSerializer
 
@@ -20,3 +22,17 @@ class ProfilViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=['get', 'put', 'patch'], url_path='me')
+    def me(self, request):
+        try:
+            profile = Profil.objects.get(user=request.user)
+            if request.method in ['PUT', 'PATCH']:
+                serializer = ProfilSerializer(profile, data=request.data, partial=request.method == 'PATCH')
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response(serializer.data)
+            serializer = ProfilSerializer(profile)
+            return Response(serializer.data)
+        except Profil.DoesNotExist:
+            return Response({'detail': 'Profil not found'}, status=404)
