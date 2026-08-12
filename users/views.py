@@ -39,6 +39,10 @@ class ProfileView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         return self.request.user
 
+    def get(self, request, *args, **kwargs):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
 
 class ResetPasswordView(generics.GenericAPIView):
     queryset = CustomUser.objects.all()
@@ -77,6 +81,8 @@ class ResetPasswordView(generics.GenericAPIView):
 
 
 class CustomLoginView(TokenObtainPairView):
+    permission_classes = [permissions.AllowAny]  # Explicitement AllowAny pour le login
+
     def post(self, request, *args, **kwargs):
         username = request.data.get('username')
         password = request.data.get('password')

@@ -11,6 +11,7 @@ class SkillSerializer(serializers.ModelSerializer):
 class ProfilSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
     full_name = serializers.CharField(source='user.full_name', read_only=True)
+    email = serializers.CharField(source='user.email', read_only=True, allow_blank=True)
     # Champs provenant de CustomUser (lecture seule)
     user_profession = serializers.CharField(source='user.profession', read_only=True, required=False, allow_blank=True)
     user_speciality = serializers.CharField(source='user.speciality', read_only=True, required=False, allow_blank=True)
@@ -28,7 +29,7 @@ class ProfilSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profil
-        fields = ['id', 'username', 'full_name', 'user_profession', 'user_speciality', 'country', 'city', 'photo', 'photo_url', 'bio', 'location', 'website', 'profession', 'speciality', 'banner', 'banner_url', 'created_at', 'skills', 'last_profession_update', 'date_joined']
+        fields = ['id', 'username', 'full_name', 'email', 'user_profession', 'user_speciality', 'country', 'city', 'photo', 'photo_url', 'bio', 'location', 'website', 'profession', 'speciality', 'banner', 'banner_url', 'created_at', 'skills', 'last_profession_update', 'date_joined']
     
     def get_photo_url(self, obj):
         if obj.photo:

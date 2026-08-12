@@ -41,8 +41,15 @@ class ProfilViewSet(viewsets.ModelViewSet):
         try:
             if not request.user.is_authenticated:
                 return Response({'detail': 'Authentication required'}, status=401)
-                
+
             profile, created = Profil.objects.get_or_create(user=request.user)
+
+            # Synchroniser les données CustomUser vers Profil lors de la création
+            if created:
+                profile.profession = request.user.profession
+                profile.speciality = request.user.speciality
+                profile.save()
+
             if request.method in ['PUT', 'PATCH']:
                 # Gérer l'upload de fichiers vers Supabase
                 if 'photo' in request.FILES:
