@@ -5,8 +5,8 @@ class Video(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    file = models.FileField(upload_to='videos/')
-    cover = models.ImageField(upload_to='covers/', blank=True, null=True)
+    file = models.CharField(max_length=500)  # Stocke le nom du fichier Supabase
+    cover = models.CharField(max_length=500, blank=True, null=True)  # Stocke le nom du fichier cover Supabase
     created_at = models.DateTimeField(auto_now_add=True)
     is_public = models.BooleanField(default=True)
 

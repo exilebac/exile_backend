@@ -16,6 +16,40 @@ def upload_video(file, filename):
     )
     return res  # retounen repons upload la pou debugging
 
+def upload_file(file, filename):
+    """
+    Upload yon fichye (photo oswa banner) nan bucket EXILE_IMAGES.
+    Détecte automatiquement le MIME type selon l'extension du fichier.
+    Supporte 7+ formats d'images: jpg, jpeg, png, gif, webp, bmp, tiff, svg
+    """
+    # Détecter le MIME type selon l'extension
+    content_type = "image/jpeg"  # Par défaut
+    ext = filename.lower().split('.')[-1] if '.' in filename else ''
+    
+    if ext in ['jpg', 'jpeg']:
+        content_type = "image/jpeg"
+    elif ext == 'png':
+        content_type = "image/png"
+    elif ext == 'gif':
+        content_type = "image/gif"
+    elif ext == 'webp':
+        content_type = "image/webp"
+    elif ext == 'bmp':
+        content_type = "image/bmp"
+    elif ext in ['tiff', 'tif']:
+        content_type = "image/tiff"
+    elif ext == 'svg':
+        content_type = "image/svg+xml"
+    elif ext == 'ico':
+        content_type = "image/x-icon"
+    
+    res = supabase.storage.from_("Exile_images").upload(
+        filename,
+        file,
+        {"content-type": content_type}
+    )
+    return res
+
 def get_signed_url(filename, expire=3600):
     """
     Kreye yon signed URL pou videyo a.
