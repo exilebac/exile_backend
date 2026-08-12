@@ -1,7 +1,5 @@
 from django.urls import path, include
 
-from .views import upload_video_view
-
 
 urlpatterns = [
     
@@ -11,8 +9,6 @@ urlpatterns = [
     path('evenement/', include('evenement.urls')),
     path('abonnement/', include('abonnement.urls')),
     path('profil/', include('profil.urls')),
-
-    path("videos/upload/", upload_video_view, name="upload_video"),
 
     path('activities/', include('activities.urls')),
     path('badges/', include('badges.urls')),
