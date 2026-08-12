@@ -5,15 +5,6 @@ from django.utils import timezone
 from .models import Profil, Skill
 from .serializers import ProfilSerializer, SkillSerializer
 
-# Custom permission: tout moun ka wè profil, men sèlman pwopriyetè ka modifye li
-from rest_framework.permissions import BasePermission
-
-class IsOwnerOrReadOnly(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        if request.method in ['GET', 'HEAD', 'OPTIONS']:
-            return True
-        return obj.user == request.user
-
 class SkillViewSet(viewsets.ModelViewSet):
     serializer_class = SkillSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -29,9 +20,14 @@ class SkillViewSet(viewsets.ModelViewSet):
 class ProfilViewSet(viewsets.ModelViewSet):
     serializer_class = ProfilSerializer
     queryset = Profil.objects.select_related('user').prefetch_related('skills').all()
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [permissions.AllowAny]  # Changed to allow public viewing
     filter_backends = [filters.SearchFilter]
     search_fields = ['user__username', 'user__full_name', 'user__profession', 'user__speciality', 'user__country', 'user__city', 'bio', 'location']
+
+    def get_permissions(self):
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -43,6 +39,9 @@ class ProfilViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get', 'put', 'patch'], url_path='me')
     def me(self, request):
         try:
+            if not request.user.is_authenticated:
+                return Response({'detail': 'Authentication required'}, status=401)
+                
             profile, created = Profil.objects.get_or_create(user=request.user)
             if request.method in ['PUT', 'PATCH']:
                 # Gérer l'upload de fichiers vers Supabase
@@ -66,7 +65,7 @@ class ProfilViewSet(viewsets.ModelViewSet):
                 if 'profession' in request.data:
                     profession = request.data['profession']
                     # Mettre à jour CustomUser avec restriction de 30 jours
-                    if request.user.can_update_profession():
+                    if hasattr(request.user, 'can_update_profession') and request.user.can_update_profession():
                         request.user.profession = profession
                         request.user.last_profession_update = timezone.now()
                         request.user.save()
@@ -92,4 +91,6 @@ class ProfilViewSet(viewsets.ModelViewSet):
             serializer = ProfilSerializer(profile, context={'request': request})
             return Response(serializer.data)
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return Response({'detail': str(e)}, status=500)
