@@ -9,12 +9,16 @@ def upload_video(file, filename):
     Upload yon videyo nan bucket EXILE_VIDEOS.
     Presize MIME type pou evite erè 415 (invalid_mime_type).
     """
-    res = supabase.storage.from_("Exile_videos").upload(
-        filename,
-        file,
-        {"content-type": "video/mp4"}  # 👈 presize tip fichye a
-    )
-    return res  # retounen repons upload la pou debugging
+    try:
+        res = supabase.storage.from_("Exile_videos").upload(
+            filename,
+            file,
+            {"content-type": "video/mp4"}  # 👈 presize tip fichye a
+        )
+        return res  # retounen repons upload la pou debugging
+    except Exception as e:
+        print(f"Erreur upload vidéo: {e}")
+        raise
 
 def upload_file(file, filename):
     """
@@ -22,33 +26,37 @@ def upload_file(file, filename):
     Détecte automatiquement le MIME type selon l'extension du fichier.
     Supporte 7+ formats d'images: jpg, jpeg, png, gif, webp, bmp, tiff, svg
     """
-    # Détecter le MIME type selon l'extension
-    content_type = "image/jpeg"  # Par défaut
-    ext = filename.lower().split('.')[-1] if '.' in filename else ''
-    
-    if ext in ['jpg', 'jpeg']:
-        content_type = "image/jpeg"
-    elif ext == 'png':
-        content_type = "image/png"
-    elif ext == 'gif':
-        content_type = "image/gif"
-    elif ext == 'webp':
-        content_type = "image/webp"
-    elif ext == 'bmp':
-        content_type = "image/bmp"
-    elif ext in ['tiff', 'tif']:
-        content_type = "image/tiff"
-    elif ext == 'svg':
-        content_type = "image/svg+xml"
-    elif ext == 'ico':
-        content_type = "image/x-icon"
-    
-    res = supabase.storage.from_("Exile_images").upload(
-        filename,
-        file,
-        {"content-type": content_type}
-    )
-    return res
+    try:
+        # Détecter le MIME type selon l'extension
+        content_type = "image/jpeg"  # Par défaut
+        ext = filename.lower().split('.')[-1] if '.' in filename else ''
+
+        if ext in ['jpg', 'jpeg']:
+            content_type = "image/jpeg"
+        elif ext == 'png':
+            content_type = "image/png"
+        elif ext == 'gif':
+            content_type = "image/gif"
+        elif ext == 'webp':
+            content_type = "image/webp"
+        elif ext == 'bmp':
+            content_type = "image/bmp"
+        elif ext in ['tiff', 'tif']:
+            content_type = "image/tiff"
+        elif ext == 'svg':
+            content_type = "image/svg+xml"
+        elif ext == 'ico':
+            content_type = "image/x-icon"
+
+        res = supabase.storage.from_("Exile_images").upload(
+            filename,
+            file,
+            {"content-type": content_type}
+        )
+        return res
+    except Exception as e:
+        print(f"Erreur upload fichier: {e}")
+        raise
 
 def get_signed_url(filename, expire=3600):
     """
