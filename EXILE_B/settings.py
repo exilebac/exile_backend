@@ -19,15 +19,26 @@ import os
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-# Database - Configuration PostgreSQL pour production
-# Render fournit automatiquement DATABASE_URL en production
-DATABASES = {
-    "default": env.db(
-        "DATABASE_URL",
-        default="sqlite:///db.sqlite3",  # Fallback pour développement local
-        engine="django.db.backends.postgresql"
-    )
-}
+# Database - Configuration hybride PostgreSQL/SQLite
+# Production: PostgreSQL via Render DATABASE_URL
+# Développement: SQLite (fallback automatique)
+import os
+
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+
+if DATABASE_URL.startswith("postgresql"):
+    # Production avec PostgreSQL
+    DATABASES = {
+        "default": env.db("DATABASE_URL")
+    }
+else:
+    # Développement local avec SQLite
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # CORS / Auth
 CORS_ALLOWED_ORIGINS = [
