@@ -29,16 +29,16 @@ class VideoViewSet(viewsets.ModelViewSet):
         video_file = request.FILES.get('file')
         if not video_file:
             return Response({'error': 'Aucun fichier vidéo fourni'}, status=400)
-        
+
         try:
             # Upload vers Supabase
             filename = f"video_{request.user.id}_{video_file.name}"
             upload_result = upload_video(video_file, filename)
-            
+
             # Déterminer si la vidéo est publique ou brouillon
             is_public_str = request.data.get('is_public', 'true')
             is_public = is_public_str == 'true'
-            
+
             # Créer l'enregistrement dans Django avec le nom du fichier Supabase
             video_data = {
                 'title': request.data.get('title', filename),
@@ -47,12 +47,14 @@ class VideoViewSet(viewsets.ModelViewSet):
                 'owner': request.user.id,
                 'is_public': is_public
             }
-            
+
             serializer = self.get_serializer(data=video_data)
             serializer.is_valid(raise_exception=True)
-            serializer.save()
-            
-            return Response(serializer.data, status=201)
+            video_instance = serializer.save()
+
+            # Renvoyer les données complètes avec URLs signées
+            response_data = serializer.data
+            return Response(response_data, status=201)
         except Exception as e:
             import traceback
             traceback.print_exc()
