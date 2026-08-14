@@ -10,9 +10,11 @@ def upload_video(file, filename):
     Presize MIME type pou evite erè 415 (invalid_mime_type).
     """
     try:
+        # Convertir le fichier Django en bytes pour Supabase
+        file_content = file.read()
         res = supabase.storage.from_("Exile_videos").upload(
             filename,
-            file,
+            file_content,
             {"content-type": "video/mp4"}  # 👈 presize tip fichye a
         )
         return res  # retounen repons upload la pou debugging
@@ -27,6 +29,9 @@ def upload_file(file, filename):
     Supporte 7+ formats d'images: jpg, jpeg, png, gif, webp, bmp, tiff, svg
     """
     try:
+        # Convertir le fichier Django en bytes pour Supabase
+        file_content = file.read()
+        
         # Détecter le MIME type selon l'extension
         content_type = "image/jpeg"  # Par défaut
         ext = filename.lower().split('.')[-1] if '.' in filename else ''
@@ -50,7 +55,7 @@ def upload_file(file, filename):
 
         res = supabase.storage.from_("Exile_images").upload(
             filename,
-            file,
+            file_content,
             {"content-type": content_type}
         )
         return res
