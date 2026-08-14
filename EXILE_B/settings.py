@@ -1,143 +1,249 @@
+import os
 import environ
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Initialize environ
+
+# ============================================================
+# ENVIRONMENT
+# ============================================================
+
 env = environ.Env(
     DEBUG=(bool, False)
 )
 
-# Li .env file nan dev (Render ap itilize env vars dirèk)
+# Local : lecture du fichier .env
+# Render : utilise directement les variables d'environnement
 environ.Env.read_env(str(BASE_DIR / ".env"))
 
-# Core settings
+
+# ============================================================
+# CORE SETTINGS
+# ============================================================
+
 SECRET_KEY = env("SECRET_KEY")
+
 DEBUG = env("DEBUG")
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
-import os
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-# Database - Configuration hybride PostgreSQL/SQLite
-# Production: PostgreSQL via Render DATABASE_URL
-# Développement: SQLite (fallback automatique)
-import os
+ALLOWED_HOSTS = env.list(
+    "ALLOWED_HOSTS",
+    default=["localhost", "127.0.0.1"]
+)
 
-DATABASE_URL = os.getenv("DATABASE_URL", "")
 
-if DATABASE_URL.startswith("postgresql"):
-    # Production avec PostgreSQL
-    DATABASES = {
-        "default": env.db("DATABASE_URL")
-    }
-else:
-    # Développement local avec SQLite
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
+# ============================================================
+# SUPABASE
+# ============================================================
 
-# CORS / Auth
+SUPABASE_URL = env("SUPABASE_URL", default="")
+
+SUPABASE_KEY = env("SUPABASE_KEY", default="")
+
+
+# ============================================================
+# DATABASE
+# ============================================================
+#
+# DATABASE_URL doit maintenant pointer vers
+# Supabase PostgreSQL.
+#
+# Exemple :
+#
+# DATABASE_URL=postgresql://postgres.xxxxx:mot_de_passe@....pooler.supabase.com:5432/postgres
+#
+# Django utilise automatiquement PostgreSQL si DATABASE_URL
+# est présente.
+#
+
+DATABASES = {
+    "default": env.db("DATABASE_URL")
+}
+
+
+# ============================================================
+# CORS
+# ============================================================
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
-    "https://exile-16qm.onrender.com",
+    "https://exile-backend-9q6o.onrender.com",
     "https://exoe.netlify.app",
-    "https://exoe.vercel.app"
+    "https://exoe.vercel.app",
 ]
+
 CORS_ALLOW_CREDENTIALS = True
-AUTH_USER_MODEL = 'users.CustomUser'
 
 
+# ============================================================
+# AUTHENTICATION
+# ============================================================
+
+AUTH_USER_MODEL = "users.CustomUser"
+
+
+# ============================================================
+# INSTALLED APPS
+# ============================================================
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'rest_framework',
-    'users',
-    'API',
-    'accueil',
-    'demande',
-    'evenement',
-    'abonnement',
-    'profil',
-    'activities',
-    'badges',
-    'drf_spectacular',
-    'drf_spectacular_sidecar',
-    'corsheaders',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+
+    "rest_framework",
+
+    "users",
+    "API",
+    "accueil",
+    "demande",
+    "evenement",
+    "abonnement",
+    "profil",
+    "activities",
+    "badges",
+
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
+
+    "corsheaders",
 ]
 
 
+# ============================================================
+# MIDDLEWARE
+# ============================================================
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+
+    "django.middleware.security.SecurityMiddleware",
+
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+
+    "django.contrib.sessions.middleware.SessionMiddleware",
+
+    "django.middleware.common.CommonMiddleware",
+
+    "django.middleware.csrf.CsrfViewMiddleware",
+
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+
+    "django.contrib.messages.middleware.MessageMiddleware",
+
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+
+# ============================================================
+# DJANGO REST FRAMEWORK
+# ============================================================
+
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
     ),
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+
+    "DEFAULT_SCHEMA_CLASS":
+        "drf_spectacular.openapi.AutoSchema",
 }
+
+
+# ============================================================
+# TEMPLATES
+# ============================================================
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates"],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+
+        "DIRS": [
+            BASE_DIR / "templates"
+        ],
+
+        "APP_DIRS": True,
+
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+
+                "django.template.context_processors.request",
+
+                "django.contrib.auth.context_processors.auth",
+
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-# Static & Media
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
 
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# ============================================================
+# STATIC & MEDIA
+# ============================================================
 
-ROOT_URLCONF = 'EXILE_B.urls'
-WSGI_APPLICATION = 'EXILE_B.wsgi.application'
+MEDIA_URL = "/media/"
 
-# Password validation - Utiliser uniquement validateur longueur minimale
+MEDIA_ROOT = BASE_DIR / "media"
+
+
+STATIC_URL = "/static/"
+
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STATICFILES_STORAGE = (
+    "whitenoise.storage.CompressedManifestStaticFilesStorage"
+)
+
+
+# ============================================================
+# URL / WSGI
+# ============================================================
+
+ROOT_URLCONF = "EXILE_B.urls"
+
+WSGI_APPLICATION = "EXILE_B.wsgi.application"
+
+
+# ============================================================
+# PASSWORD VALIDATION
+# ============================================================
+
 AUTH_PASSWORD_VALIDATORS = [
-    # {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 8}},
-    # {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    # {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {
+        "NAME":
+            "django.contrib.auth.password_validation.MinimumLengthValidator",
+
+        "OPTIONS": {
+            "min_length": 8
+        },
+    },
 ]
 
-# Internationalization
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+
+# ============================================================
+# INTERNATIONALIZATION
+# ============================================================
+
+LANGUAGE_CODE = "en-us"
+
+TIME_ZONE = "UTC"
+
 USE_I18N = True
+
 USE_TZ = True
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ============================================================
+# DEFAULT PRIMARY KEY
+# ============================================================
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
