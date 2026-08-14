@@ -71,6 +71,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://exile-backend-9q6o.onrender.com",
     "https://exoe.netlify.app",
     "https://exoe.vercel.app",
+    "https://exoe-neat4e0ph-exile-team1.vercel.app",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
