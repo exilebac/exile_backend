@@ -28,7 +28,7 @@ DEBUG = env("DEBUG")
 
 ALLOWED_HOSTS = env.list(
     "ALLOWED_HOSTS",
-    default=["localhost", "127.0.0.1"]
+    default=["localhost", "127.0.0.1", "exile-backend-9q6o.onrender.com"]
 )
 
 
@@ -67,6 +67,7 @@ DATABASES = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "http://localhost:3001",
     "http://localhost:5173",
     "https://exile-backend-9q6o.onrender.com",
     "https://exoe.netlify.app",
@@ -157,6 +158,47 @@ REST_FRAMEWORK = {
 
     "DEFAULT_SCHEMA_CLASS":
         "drf_spectacular.openapi.AutoSchema",
+}
+
+
+# ============================================================
+# SIMPLE JWT CONFIGURATION
+# ============================================================
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+    "UPDATE_LAST_LOGIN": False,
+
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "VERIFYING_KEY": None,
+    "AUDIENCE": None,
+    "ISSUER": None,
+
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "USER_AUTHENTICATION_RULE": lambda user: user is not None and user.is_active,
+
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+}
+
+
+# ============================================================
+# CACHE CONFIGURATION
+# ============================================================
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    }
 }
 
 
