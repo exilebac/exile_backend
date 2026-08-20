@@ -24,6 +24,13 @@ class ProfilViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['user__username', 'user__full_name', 'user__profession', 'user__speciality', 'user__country', 'user__city', 'bio', 'location']
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user_id = self.request.query_params.get('user')
+        if user_id:
+            queryset = queryset.filter(user_id=user_id)
+        return queryset
+
     def get_permissions(self):
         if self.action in ['update', 'partial_update', 'destroy']:
             return [permissions.IsAuthenticated()]
@@ -56,17 +63,17 @@ class ProfilViewSet(viewsets.ModelViewSet):
                     from API.services.supabase_service import upload_file
                     photo_file = request.FILES['photo']
                     photo_filename = f"profile_{request.user.id}_{photo_file.name}"
-                    upload_file(photo_file, photo_filename)
-                    # Stocker le nom du fichier Supabase dans le champ photo (CharField)
-                    profile.photo = photo_filename
+                    upload_result = upload_file(photo_file, photo_filename)
+                    # Stocker le nom réellement généré par Supabase (il contient un UUID)
+                    profile.photo = upload_result["filename"]
                 
                 if 'banner' in request.FILES:
                     from API.services.supabase_service import upload_file
                     banner_file = request.FILES['banner']
                     banner_filename = f"banner_{request.user.id}_{banner_file.name}"
-                    upload_file(banner_file, banner_filename)
-                    # Stocker le nom du fichier Supabase dans le champ banner (CharField)
-                    profile.banner = banner_filename
+                    upload_result = upload_file(banner_file, banner_filename)
+                    # Stocker le nom réellement généré par Supabase (il contient un UUID)
+                    profile.banner = upload_result["filename"]
                 
                 # Synchroniser la profession entre CustomUser et Profil
                 if 'profession' in request.data:

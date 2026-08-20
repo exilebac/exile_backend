@@ -1,3 +1,6 @@
+import mimetypes
+import os
+
 from rest_framework import serializers
 
 from .models import Video
@@ -18,6 +21,10 @@ class VideoSerializer(serializers.ModelSerializer):
         source="owner.username",
         read_only=True,
     )
+
+    owner_full_name = serializers.SerializerMethodField()
+
+    owner_avatar = serializers.SerializerMethodField()
 
     # Champ interne pour l'écriture de l'ID
     owner_id = serializers.IntegerField(write_only=True, required=False)
@@ -40,6 +47,12 @@ class VideoSerializer(serializers.ModelSerializer):
 
     video_available = serializers.SerializerMethodField()
 
+    # ---------------------------------------------------------
+    # Type MIME déduit de l'extension du fichier stocké
+    # ---------------------------------------------------------
+
+    mime_type = serializers.SerializerMethodField()
+
     class Meta:
 
         model = Video
@@ -50,12 +63,17 @@ class VideoSerializer(serializers.ModelSerializer):
             "description",
             "owner",
             "owner_username",
+            "owner_full_name",
+            "owner_avatar",
             "owner_id",
             "file",
             "file_url",
+            "cover",
             "cover_url",
+            "mime_type",
             "created_at",
             "is_public",
+            "views",
             "video_available",
         ]
 
@@ -63,9 +81,13 @@ class VideoSerializer(serializers.ModelSerializer):
             "id",
             "owner",
             "owner_username",
+            "owner_full_name",
+            "owner_avatar",
             "file_url",
             "cover_url",
+            "mime_type",
             "created_at",
+            "views",
         ]
 
     def create(self, validated_data):
@@ -78,14 +100,63 @@ class VideoSerializer(serializers.ModelSerializer):
     # VIDEO URL
     # =========================================================
 
-    def get_file_url(self, obj):
+    def get_owner_full_name(self, obj):
+        """Nom réel de l'auteur, avec repli sur le username."""
+        owner = obj.owner
+        if not owner:
+            return None
+        return (
+            getattr(owner, "full_name", "")
+            or owner.get_full_name()
+            or owner.username
+        )
 
-        if not obj.file:
-            print(f"DEBUG: file_url - obj.file is None for video {obj.id}")
+    def get_owner_avatar(self, obj):
+        """URL signée de la photo de profil de l'auteur (None si absente)."""
+        owner = obj.owner
+        profil = getattr(owner, "profil", None)
+        if profil is None:
+            from profil.models import Profil
+            profil = Profil.objects.filter(user=owner).first()
+
+        if not profil or not profil.photo:
             return None
 
         try:
-            print(f"DEBUG: Generating signed URL for file: {obj.file}")
+            result = (
+                supabase
+                .storage
+                .from_("Exile_images")
+                .create_signed_url(profil.photo, 3600)
+            )
+            if isinstance(result, dict):
+                return (
+                    result.get("signed_url")
+                    or result.get("signedUrl")
+                    or result.get("signedURL")
+                )
+            return result
+        except Exception:
+            return None
+
+    def get_mime_type(self, obj):
+        """Type MIME déduit de l'extension, utile au lecteur vidéo."""
+        if not obj.file:
+            return None
+        extension = os.path.splitext(obj.file)[1].lower()
+        if extension == ".mov":
+            # Les navigateurs refusent video/quicktime alors que le conteneur
+            # (H.264/AAC) est lisible: on annonce video/mp4.
+            return "video/mp4"
+        guessed, _ = mimetypes.guess_type(obj.file)
+        return guessed or "video/mp4"
+
+    def get_file_url(self, obj):
+
+        if not obj.file:
+            return None
+
+        try:
             result = (
                 supabase
                 .storage
@@ -95,19 +166,20 @@ class VideoSerializer(serializers.ModelSerializer):
                     3600,
                 )
             )
-            print(f"DEBUG: Supabase result: {result}")
 
             if isinstance(result, dict):
 
                 # Supabase peut retourner différentes clés pour l'URL signée
-                signed_url = result.get("signed_url") or result.get("signedUrl") or result.get("signedURL")
-                print(f"DEBUG: Extracted signed_url: {signed_url}")
-                return signed_url
+                return (
+                    result.get("signed_url")
+                    or result.get("signedUrl")
+                    or result.get("signedURL")
+                )
 
             return result
 
         except Exception as e:
-            print(f"DEBUG: Error generating file_url for video {obj.id}: {e}")
+            print(f"Erreur génération file_url pour la vidéo {obj.id}: {e}")
             # Fallback: retourner l'URL publique directe si le fichier n'existe pas dans Supabase
             # ou None si vraiment impossible
             return None
@@ -119,11 +191,9 @@ class VideoSerializer(serializers.ModelSerializer):
     def get_cover_url(self, obj):
 
         if not obj.cover:
-            print(f"DEBUG: cover_url - obj.cover is None for video {obj.id}")
             return None
 
         try:
-            print(f"DEBUG: Generating signed URL for cover: {obj.cover}")
             result = (
                 supabase
                 .storage
@@ -133,19 +203,18 @@ class VideoSerializer(serializers.ModelSerializer):
                     3600,
                 )
             )
-            print(f"DEBUG: Supabase cover result: {result}")
 
             if isinstance(result, dict):
-                signed_url = result.get("signed_url") or result.get("signedUrl") or result.get("signedURL")
-                print(f"DEBUG: Extracted cover signed_url: {signed_url}")
-                return signed_url
+                return (
+                    result.get("signed_url")
+                    or result.get("signedUrl")
+                    or result.get("signedURL")
+                )
 
             return result
 
         except Exception as e:
-            print(f"DEBUG: Error generating cover_url for video {obj.id}: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"Erreur génération cover_url pour la vidéo {obj.id}: {e}")
             return None
 
     # =========================================================
