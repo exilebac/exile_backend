@@ -9,6 +9,7 @@ class SkillSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at']
 
 class ProfilSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
     full_name = serializers.CharField(source='user.full_name', read_only=True)
     email = serializers.CharField(source='user.email', read_only=True, allow_blank=True)
@@ -29,7 +30,7 @@ class ProfilSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profil
-        fields = ['id', 'username', 'full_name', 'email', 'user_profession', 'user_speciality', 'country', 'city', 'photo', 'photo_url', 'bio', 'location', 'website', 'profession', 'speciality', 'banner', 'banner_url', 'created_at', 'skills', 'last_profession_update', 'date_joined']
+        fields = ['id', 'user', 'username', 'full_name', 'email', 'user_profession', 'user_speciality', 'country', 'city', 'photo', 'photo_url', 'bio', 'location', 'website', 'profession', 'speciality', 'banner', 'banner_url', 'created_at', 'skills', 'last_profession_update', 'date_joined']
     
     def get_photo_url(self, obj):
         if obj.photo:

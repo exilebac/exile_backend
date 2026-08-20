@@ -1,3 +1,4 @@
+from django.db.models import F, Q
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import viewsets
@@ -5,7 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
 from .models import Video
 from .serializers import VideoSerializer
-from API.services.supabase_service import upload_video
+from API.services.supabase_service import upload_file, upload_video
 
 def backend_status(request):
     """Endpoint pour vérifier le statut du backend"""
@@ -23,9 +24,25 @@ class VideoViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated()]
 
     def get_queryset(self):
-        if self.action == 'list':
-            return Video.objects.filter(is_public=True).order_by('-created_at')
-        return Video.objects.all()
+        if self.action != 'list':
+            return Video.objects.select_related('owner').all()
+
+        queryset = Video.objects.select_related('owner').filter(is_public=True)
+
+        owner_id = self.request.query_params.get('owner')
+        if owner_id:
+            queryset = queryset.filter(owner_id=owner_id)
+
+        search = self.request.query_params.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search)
+                | Q(description__icontains=search)
+                | Q(owner__username__icontains=search)
+                | Q(owner__full_name__icontains=search)
+            )
+
+        return queryset.order_by('-created_at')
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my_videos(self, request):
@@ -33,6 +50,18 @@ class VideoViewSet(viewsets.ModelViewSet):
         videos = Video.objects.filter(owner=request.user).order_by('-created_at')
         serializer = self.get_serializer(videos, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], permission_classes=[AllowAny], url_path='view')
+    def register_view(self, request, pk=None):
+        """Incrémente le compteur de vues d'une vidéo."""
+        Video.objects.filter(pk=pk).update(views=F('views') + 1)
+        video = Video.objects.filter(pk=pk).first()
+        if not video:
+            return Response(
+                {"error": "Vidéo introuvable."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response({"id": video.id, "views": video.views})
 
     def create(self, request, *args, **kwargs):
         """
@@ -108,6 +137,28 @@ class VideoViewSet(viewsets.ModelViewSet):
             # DONNÉES DJANGO
             # ====================================================
 
+            # ====================================================
+            # COUVERTURE / MINIATURE (facultative)
+            # ====================================================
+
+            cover_file = (
+                request.FILES.get("cover")
+                or request.FILES.get("thumbnail")
+            )
+
+            stored_cover = None
+
+            if cover_file:
+                cover_result = upload_file(
+                    cover_file,
+                    f"cover_{request.user.id}_{cover_file.name}",
+                )
+                stored_cover = cover_result["filename"]
+
+            # ====================================================
+            # DONNÉES DJANGO
+            # ====================================================
+
             video_data = {
                 "title": request.data.get(
                     "title",
@@ -127,6 +178,9 @@ class VideoViewSet(viewsets.ModelViewSet):
 
                 "is_public": is_public,
             }
+
+            if stored_cover:
+                video_data["cover"] = stored_cover
 
             # ====================================================
             # VALIDATION

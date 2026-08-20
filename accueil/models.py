@@ -9,6 +9,7 @@ class Video(models.Model):
     cover = models.CharField(max_length=500, blank=True, null=True)  # Stocke le nom du fichier cover Supabase
     created_at = models.DateTimeField(auto_now_add=True)
     is_public = models.BooleanField(default=True)
+    views = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.title
